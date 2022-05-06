@@ -21,18 +21,31 @@ class CustomAuthController extends Controller
 
     public function customLogin(Request $request)
     {
-        $request->validate([
-            'email' => 'required',
+        $input = $request->all();
+        $this->validate($request, [
+            'name' => 'required',
             'password' => 'required',
         ]);
-
-        $credentials = $request->only('email', 'password');
-        if (Auth::attempt($credentials)) {
+        $fieldType = filter_var($request->name, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
+        if (auth()->attempt(array($fieldType => $input['name'], 'password' => $input['password']))) {
             return redirect()->intended('dashboard')
                 ->withSuccess('Signed in');
+        } else {
+            return redirect("login")->withSuccess('Login details are not valid');
         }
 
-        return redirect("login")->withSuccess('Login details are not valid');
+        // $request->validate([
+        //     'email' => 'required',
+        //     'password' => 'required',
+        // ]);
+
+        // $credentials = $request->only('email', 'password');
+        // if (Auth::attempt($credentials)) {
+        //     return redirect()->intended('dashboard')
+        //         ->withSuccess('Signed in');
+        // }
+
+        // return redirect("login")->withSuccess('Login details are not valid');
     }
 
     public function registration()
@@ -44,6 +57,9 @@ class CustomAuthController extends Controller
     {
         $request->validate([
             'name' => 'required',
+            'firstname' => 'required',
+            'lastname' => 'required',
+            'phone' => 'required',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6',
         ]);
@@ -58,6 +74,9 @@ class CustomAuthController extends Controller
     {
         return User::create([
             'name' => $data['name'],
+            'firstname' => $data['firstname'],
+            'lastname' => $data['lastname'],
+            'phone' => $data['phone'],
             'email' => $data['email'],
             'password' => FacadesHash::make($data['password'])
         ]);
